@@ -40,11 +40,25 @@ use WP_Post;
  */
 defined( 'ABSPATH' ) || die();
 
-/**
- * Don't run if multisite not enabled
- */
-if ( ! is_multisite() ) {
-	return;
+// Define API Endpoint and Authentication
+const MEDIA_LIBRARY_API_URL = 'https://central-media-library-site.com/wp-json';
+const API_KEY = 'your_api_key';
+
+// Function to Make API Requests:
+function make_api_request($endpoint, $method = 'GET', $data = []) {
+    $url = MEDIA_LIBRARY_API_URL . $endpoint;
+    $args = [
+        'method' => $method,
+        'headers' => [
+            'Authorization' => 'Bearer ' . API_KEY,
+            'Content-Type' => 'application/json',
+        ],
+    ];
+    if ($method === 'POST' || $method === 'PUT') {
+        $args['body'] = json_encode($data);
+    }
+    $response = wp_remote_request($url, $args);
+    return json_decode(wp_remote_retrieve_body($response), true);
 }
 
 /**
@@ -60,30 +74,8 @@ const SITE_ID = 2;
  *
  * @return int The network media library site ID.
  */
-function get_site_id() : int {
-	$site_id = SITE_ID;
-
-	/**
-	 * Filters the ID of the site which acts as the network media library.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $site_id The network media library site ID.
-	 */
-	$site_id = (int) apply_filters( 'network-media-library/site_id', $site_id );
-
-	/**
-	 * Legacy filter which filters the ID of the site which acts as the network media library.
-	 *
-	 * This is provided for compatibility with the Multisite Global Media plugin.
-	 *
-	 * @since 0.0.3
-	 *
-	 * @param int $site_id The network media library site ID.
-	 */
-	$site_id = (int) apply_filters_deprecated( 'global_media.site_id', [ $site_id ], '1.0.0', 'network-media-library/site_id' );
-
-	return $site_id;
+function get_site_id() {
+    return 2; // Not needed, kept for compatibility
 }
 
 /**
@@ -92,10 +84,10 @@ function get_site_id() : int {
  * @param mixed $value An optional value used when this function is used as a hook filter.
  * @return mixed The value of the `$value` parameter.
  */
-function switch_to_media_site( $value = null ) {
-	switch_to_blog( get_site_id() );
-
-	return $value;
+function switch_to_media_site($value = null) {
+    // Example API request to get media
+    $response = make_api_request('/wp/v2/media');
+    return $response;
 }
 
 /**
